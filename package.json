@@ -1,0 +1,29 @@
+{
+  "name": "innovation-lifecycle-manager",
+  "version": "1.0.0",
+  "description": "A web application for tracking innovation initiatives from ideation through deployment",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev --workspace=server",
+    "dev:client": "npm run dev --workspace=client",
+    "db:reset": "npm run db:reset --workspace=server",
+    "db:seed": "npm run db:seed --workspace=server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "innovation",
+    "lifecycle",
+    "management",
+    "kanban"
+  ],
+  "author": "",
+  "license": "MIT"
+}
