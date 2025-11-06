@@ -24,7 +24,7 @@ const StageColumn = ({ stage, initiatives, stageInfo }) => {
       </div>
 
       {/* Column Body */}
-      <div className="bg-gray-50 rounded-b-lg p-4 min-h-[500px] max-h-[calc(100vh-300px)] overflow-y-auto">
+      <div className={`${stageInfo.bodyBgColor} rounded-b-lg p-4 min-h-[500px] max-h-[calc(100vh-300px)] overflow-y-auto`}>
         <div className="space-y-3">
           {initiatives.length === 0 ? (
             <div className="text-center py-8 text-gray-400 text-sm">

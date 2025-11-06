@@ -83,40 +83,30 @@ const SubmitIdea = () => {
   return (
     <div className="max-w-3xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          💡 Submit New Idea
+      <div className="mb-10">
+        <h1 className="text-4xl font-bold text-slate-900 mb-3 tracking-tight">
+          Submit New Idea
         </h1>
-        <p className="text-gray-600">
+        <p className="text-lg text-slate-600">
           Share your innovation idea to get it tracked and reviewed by the team.
         </p>
       </div>
 
       {/* Success Message */}
       {success && (
-        <div className="mb-6 p-4 bg-slate-100 rounded-lg border border-slate-300">
-          <div className="flex items-center">
-            <span className="text-slate-800 text-2xl mr-3">✓</span>
-            <div>
-              <h3 className="text-slate-900 font-semibold">Idea Submitted Successfully!</h3>
-              <p className="text-slate-700 text-sm mt-1">
-                Your innovation idea has been created and is now in the IDEA stage.
-              </p>
-            </div>
-          </div>
+        <div className="mb-6 p-5 bg-slate-900 rounded-lg border-l-4 border-slate-700">
+          <h3 className="text-white font-bold text-lg">Success</h3>
+          <p className="text-slate-300 text-sm mt-1">
+            Your innovation idea has been created and is now in the IDEA stage.
+          </p>
         </div>
       )}
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-slate-100 rounded-lg border border-slate-400">
-          <div className="flex items-center">
-            <span className="text-slate-800 text-2xl mr-3">✕</span>
-            <div>
-              <h3 className="text-slate-900 font-semibold">Submission Failed</h3>
-              <p className="text-slate-700 text-sm mt-1">{error}</p>
-            </div>
-          </div>
+        <div className="mb-6 p-5 bg-slate-900 rounded-lg border-l-4 border-slate-600">
+          <h3 className="text-white font-bold text-lg">Error</h3>
+          <p className="text-slate-300 text-sm mt-1">{error}</p>
         </div>
       )}
 
