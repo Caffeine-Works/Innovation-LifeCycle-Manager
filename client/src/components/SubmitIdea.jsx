@@ -4,9 +4,12 @@
  */
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createInitiative } from '../services/api';
 
 const SubmitIdea = () => {
+  const navigate = useNavigate();
+
   // Form state
   const [formData, setFormData] = useState({
     title: '',
@@ -56,6 +59,11 @@ const SubmitIdea = () => {
 
       // Scroll to top to show success message
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Navigate to board after 2 seconds
+      setTimeout(() => {
+        navigate('/board');
+      }, 2000);
 
     } catch (err) {
       // Handle validation errors

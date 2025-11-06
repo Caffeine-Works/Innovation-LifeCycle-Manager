@@ -4,11 +4,14 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import SubmitIdea from './components/SubmitIdea';
+import KanbanBoard from './components/KanbanBoard';
 import { checkHealth } from './services/api';
 
-function App() {
+function AppContent() {
   const [apiStatus, setApiStatus] = useState('checking');
+  const location = useLocation();
 
   useEffect(() => {
     // Test API connection on mount
@@ -25,12 +28,15 @@ function App() {
     testConnection();
   }, []);
 
+  // Determine active nav item
+  const isActive = (path) => location.pathname === path;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 🚀 Innovation Lifecycle Manager
@@ -63,6 +69,30 @@ function App() {
               )}
             </div>
           </div>
+
+          {/* Navigation */}
+          <nav className="flex gap-1">
+            <Link
+              to="/board"
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                isActive('/board')
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              📊 Board
+            </Link>
+            <Link
+              to="/"
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                isActive('/')
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              💡 Submit Idea
+            </Link>
+          </nav>
         </div>
       </header>
 
@@ -86,7 +116,10 @@ function App() {
             </div>
           </div>
         ) : (
-          <SubmitIdea />
+          <Routes>
+            <Route path="/board" element={<KanbanBoard />} />
+            <Route path="/" element={<SubmitIdea />} />
+          </Routes>
         )}
       </main>
 
@@ -99,6 +132,14 @@ function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 
