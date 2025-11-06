@@ -34,36 +34,36 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-4">
+      <header className="bg-slate-900 border-b-4 border-slate-700">
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+              <h1 className="text-4xl font-bold text-white tracking-tight">
                 Innovation Lifecycle Manager
               </h1>
-              <p className="text-sm text-slate-600 mt-2 font-medium">
+              <p className="text-base text-slate-300 mt-2 font-medium">
                 Track innovation initiatives from ideation through deployment
               </p>
             </div>
 
             {/* API Status Indicator */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-600">API:</span>
+              <span className="text-sm text-slate-400">API:</span>
               {apiStatus === 'checking' && (
-                <span className="flex items-center text-slate-600 text-sm">
+                <span className="flex items-center text-slate-300 text-sm">
                   <span className="inline-block w-2 h-2 bg-slate-400 rounded-full mr-2 animate-pulse"></span>
                   Checking...
                 </span>
               )}
               {apiStatus === 'connected' && (
-                <span className="flex items-center text-slate-700 text-sm">
-                  <span className="inline-block w-2 h-2 bg-slate-800 rounded-full mr-2"></span>
+                <span className="flex items-center text-slate-200 text-sm font-medium">
+                  <span className="inline-block w-2 h-2 bg-green-400 rounded-full mr-2"></span>
                   Connected
                 </span>
               )}
               {apiStatus === 'error' && (
-                <span className="flex items-center text-slate-600 text-sm">
-                  <span className="inline-block w-2 h-2 bg-slate-400 rounded-full mr-2"></span>
+                <span className="flex items-center text-slate-400 text-sm">
+                  <span className="inline-block w-2 h-2 bg-red-400 rounded-full mr-2"></span>
                   Offline
                 </span>
               )}
@@ -74,20 +74,20 @@ function AppContent() {
           <nav className="flex gap-3">
             <Link
               to="/board"
-              className={`px-5 py-2.5 rounded-lg font-semibold transition-colors ${
+              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
                 isActive('/board')
-                  ? 'bg-slate-800 text-white'
-                  : 'text-slate-700 hover:bg-slate-100'
+                  ? 'bg-white text-slate-900'
+                  : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
               }`}
             >
               Board
             </Link>
             <Link
               to="/"
-              className={`px-5 py-2.5 rounded-lg font-semibold transition-colors ${
+              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
                 isActive('/')
-                  ? 'bg-slate-800 text-white'
-                  : 'text-slate-700 hover:bg-slate-100'
+                  ? 'bg-white text-slate-900'
+                  : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
               }`}
             >
               Submit Idea
