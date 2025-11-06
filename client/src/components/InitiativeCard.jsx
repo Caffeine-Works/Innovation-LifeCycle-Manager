@@ -6,12 +6,12 @@
 import React from 'react';
 
 const InitiativeCard = ({ initiative }) => {
-  // Category badge colors
+  // Category badge colors - flat slate theme
   const categoryColors = {
-    TECHNOLOGY: 'bg-blue-100 text-blue-800',
-    PROCESS: 'bg-green-100 text-green-800',
-    PRODUCT: 'bg-purple-100 text-purple-800',
-    OTHER: 'bg-gray-100 text-gray-800'
+    TECHNOLOGY: 'bg-slate-100 text-slate-700 border-slate-300',
+    PROCESS: 'bg-zinc-100 text-zinc-700 border-zinc-300',
+    PRODUCT: 'bg-slate-200 text-slate-800 border-slate-400',
+    OTHER: 'bg-zinc-50 text-zinc-600 border-zinc-200'
   };
 
   // Category labels
@@ -33,26 +33,26 @@ const InitiativeCard = ({ initiative }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+    <div className="bg-white rounded-lg p-4 border border-slate-200 hover:border-slate-400 hover:shadow-md transition-all cursor-pointer">
       {/* Title */}
-      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+      <h3 className="font-semibold text-slate-900 mb-2 line-clamp-2">
         {initiative.title}
       </h3>
 
       {/* Category Badge */}
       <div className="mb-3">
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColors[initiative.category]}`}>
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border ${categoryColors[initiative.category]}`}>
           {categoryLabels[initiative.category]}
         </span>
       </div>
 
       {/* Description Preview */}
-      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+      <p className="text-sm text-slate-600 mb-3 line-clamp-2">
         {initiative.description}
       </p>
 
       {/* Footer */}
-      <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100">
+      <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
         {/* Owner */}
         <div className="flex items-center gap-1">
           <span className="font-medium">👤</span>

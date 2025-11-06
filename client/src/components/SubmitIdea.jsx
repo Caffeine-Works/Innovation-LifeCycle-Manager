@@ -94,12 +94,12 @@ const SubmitIdea = () => {
 
       {/* Success Message */}
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div className="mb-6 p-4 bg-slate-100 rounded-lg border border-slate-300">
           <div className="flex items-center">
-            <span className="text-green-600 text-xl mr-3">✓</span>
+            <span className="text-slate-800 text-2xl mr-3">✓</span>
             <div>
-              <h3 className="text-green-900 font-semibold">Idea Submitted Successfully!</h3>
-              <p className="text-green-700 text-sm mt-1">
+              <h3 className="text-slate-900 font-semibold">Idea Submitted Successfully!</h3>
+              <p className="text-slate-700 text-sm mt-1">
                 Your innovation idea has been created and is now in the IDEA stage.
               </p>
             </div>
@@ -109,12 +109,12 @@ const SubmitIdea = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mb-6 p-4 bg-slate-100 rounded-lg border border-slate-400">
           <div className="flex items-center">
-            <span className="text-red-600 text-xl mr-3">✕</span>
+            <span className="text-slate-800 text-2xl mr-3">✕</span>
             <div>
-              <h3 className="text-red-900 font-semibold">Submission Failed</h3>
-              <p className="text-red-700 text-sm mt-1">{error}</p>
+              <h3 className="text-slate-900 font-semibold">Submission Failed</h3>
+              <p className="text-slate-700 text-sm mt-1">{error}</p>
             </div>
           </div>
         </div>
@@ -136,7 +136,7 @@ const SubmitIdea = () => {
             required
             minLength={10}
             maxLength={200}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="input-field"
             placeholder="e.g., AI-Powered Meeting Scheduler"
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -155,7 +155,7 @@ const SubmitIdea = () => {
             value={formData.category}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="input-field"
           >
             <option value="TECHNOLOGY">Technology Innovation</option>
             <option value="PROCESS">Process Improvement</option>
@@ -178,7 +178,7 @@ const SubmitIdea = () => {
             minLength={20}
             maxLength={2000}
             rows={4}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="input-field"
             placeholder="What problem does this innovation solve? Be specific about the pain points and current challenges..."
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -200,7 +200,7 @@ const SubmitIdea = () => {
             minLength={50}
             maxLength={5000}
             rows={6}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="input-field"
             placeholder="Describe your innovation idea in detail. What is it? How would it work? What benefits would it provide?"
           />
           <p className="text-xs text-gray-500 mt-1">

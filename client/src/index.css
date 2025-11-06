@@ -14,17 +14,25 @@
   }
 }
 
-/* Custom component styles */
+/* Custom component styles - Flat Slate/Zinc Theme */
 @layer components {
   .btn-primary {
-    @apply bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors;
+    @apply bg-slate-800 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-slate-700 transition-colors;
   }
 
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors;
+    @apply bg-slate-100 text-slate-700 px-6 py-2.5 rounded-lg font-medium hover:bg-slate-200 transition-colors;
   }
 
   .card {
-    @apply bg-white rounded-lg shadow-sm p-6 border border-gray-200;
+    @apply bg-white rounded-lg shadow-sm p-6 border border-slate-200;
+  }
+
+  .input-field {
+    @apply block w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-colors;
+  }
+
+  .badge-primary {
+    @apply inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border;
   }
 }

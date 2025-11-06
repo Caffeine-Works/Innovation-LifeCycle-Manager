@@ -12,38 +12,38 @@ const KanbanBoard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Stage configuration (4 simplified stages for demo)
+  // Stage configuration (4 simplified stages for demo) - Flat Slate Theme
   const stages = {
     IDEA: {
       label: 'Idea',
       icon: '💡',
-      bgColor: 'bg-yellow-50',
-      countBg: 'bg-yellow-100',
-      countText: 'text-yellow-800',
+      bgColor: 'bg-slate-50',
+      countBg: 'bg-slate-200 border border-slate-300',
+      countText: 'text-slate-800',
       description: 'Initial submission'
     },
     CONCEPT: {
       label: 'Concept',
       icon: '📋',
-      bgColor: 'bg-blue-50',
-      countBg: 'bg-blue-100',
-      countText: 'text-blue-800',
+      bgColor: 'bg-zinc-50',
+      countBg: 'bg-zinc-200 border border-zinc-300',
+      countText: 'text-zinc-800',
       description: 'Being evaluated'
     },
     DEVELOPMENT: {
       label: 'Development',
       icon: '⚙️',
-      bgColor: 'bg-purple-50',
-      countBg: 'bg-purple-100',
-      countText: 'text-purple-800',
+      bgColor: 'bg-slate-100',
+      countBg: 'bg-slate-300 border border-slate-400',
+      countText: 'text-slate-900',
       description: 'Being built'
     },
     DEPLOYED: {
       label: 'Deployed',
       icon: '🚀',
-      bgColor: 'bg-green-50',
-      countBg: 'bg-green-100',
-      countText: 'text-green-800',
+      bgColor: 'bg-zinc-100',
+      countBg: 'bg-zinc-300 border border-zinc-400',
+      countText: 'text-zinc-900',
       description: 'Live in production'
     }
   };
