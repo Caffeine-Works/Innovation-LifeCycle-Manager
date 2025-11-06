@@ -62,13 +62,16 @@ app.get('/api', (req, res) => {
   });
 });
 
-// TODO: Import and mount route modules here
+// Import route modules
+import initiativeRoutes from './routes/initiatives.routes.js';
+
+// Mount routes
+app.use('/api/initiatives', initiativeRoutes);
+
+// TODO: Add more routes as features are built
 // import authRoutes from './routes/auth.routes.js';
-// import initiativeRoutes from './routes/initiatives.routes.js';
 // import transitionRoutes from './routes/transitions.routes.js';
-//
 // app.use('/api/auth', authRoutes);
-// app.use('/api/initiatives', initiativeRoutes);
 // app.use('/api/transitions', transitionRoutes);
 
 // =============================================================================
