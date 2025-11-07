@@ -4,13 +4,25 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { getAllInitiatives } from '../services/api';
+import { DragDropContext } from '@hello-pangea/dnd';
+import { getAllInitiatives, updateInitiative } from '../services/api';
 import StageColumn from './StageColumn';
+import TransitionModal from './TransitionModal';
 
 const KanbanBoard = () => {
   const [initiatives, setInitiatives] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Modal state for transition confirmation
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    initiative: null,
+    fromStage: null,
+    toStage: null,
+    isBackward: false,
+    isSkipping: false
+  });
 
   // Stage configuration (4 simplified stages for demo) - Progressive shading
   const stages = {
@@ -80,6 +92,109 @@ const KanbanBoard = () => {
   // Calculate total count
   const totalCount = initiatives.length;
 
+  // Get stage order for detecting backward/skipping moves
+  const stageOrder = ['IDEA', 'CONCEPT', 'DEVELOPMENT', 'DEPLOYED'];
+
+  /**
+   * Handle drag end - called when user drops a card
+   * @param {Object} result - Drag result from react-beautiful-dnd
+   */
+  const handleDragEnd = (result) => {
+    const { source, destination, draggableId } = result;
+
+    // Dropped outside a valid droppable area
+    if (!destination) return;
+
+    // Dropped in same position
+    if (source.droppableId === destination.droppableId) return;
+
+    // Find the initiative being dragged
+    const initiative = initiatives.find(i => i.id.toString() === draggableId);
+    if (!initiative) return;
+
+    const fromStage = source.droppableId;
+    const toStage = destination.droppableId;
+
+    // Determine if this is a backward or skipping move
+    const fromIndex = stageOrder.indexOf(fromStage);
+    const toIndex = stageOrder.indexOf(toStage);
+    const isBackward = toIndex < fromIndex;
+    const isSkipping = Math.abs(toIndex - fromIndex) > 1;
+
+    // Show confirmation modal
+    setModalState({
+      isOpen: true,
+      initiative,
+      fromStage,
+      toStage,
+      isBackward,
+      isSkipping
+    });
+  };
+
+  /**
+   * Handle transition confirmation from modal
+   * @param {string} comment - Optional comment from user
+   */
+  const handleConfirmTransition = async (comment) => {
+    const { initiative, toStage } = modalState;
+
+    try {
+      // Update initiative stage via API
+      await updateInitiative(initiative.id, {
+        current_stage: toStage,
+        transition_comment: comment || null
+      });
+
+      // Update local state
+      setInitiatives(prevInitiatives =>
+        prevInitiatives.map(i =>
+          i.id === initiative.id
+            ? { ...i, current_stage: toStage }
+            : i
+        )
+      );
+
+      // Close modal
+      setModalState({
+        isOpen: false,
+        initiative: null,
+        fromStage: null,
+        toStage: null,
+        isBackward: false,
+        isSkipping: false
+      });
+
+    } catch (err) {
+      console.error('Error updating initiative stage:', err);
+      setError('Failed to update initiative stage. Please try again.');
+
+      // Close modal
+      setModalState({
+        isOpen: false,
+        initiative: null,
+        fromStage: null,
+        toStage: null,
+        isBackward: false,
+        isSkipping: false
+      });
+    }
+  };
+
+  /**
+   * Handle modal close/cancel
+   */
+  const handleCloseModal = () => {
+    setModalState({
+      isOpen: false,
+      initiative: null,
+      fromStage: null,
+      toStage: null,
+      isBackward: false,
+      isSkipping: false
+    });
+  };
+
   return (
     <div>
       {/* Header */}
@@ -129,18 +244,20 @@ const KanbanBoard = () => {
 
       {/* Kanban Board */}
       {!loading && !error && (
-        <div className="overflow-x-auto pb-6">
-          <div className="flex gap-4 justify-center">
-            {Object.entries(stages).map(([stageKey, stageInfo]) => (
-              <StageColumn
-                key={stageKey}
-                stage={stageKey}
-                initiatives={groupedInitiatives[stageKey]}
-                stageInfo={stageInfo}
-              />
-            ))}
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="overflow-x-auto pb-6">
+            <div className="flex gap-4 justify-center">
+              {Object.entries(stages).map(([stageKey, stageInfo]) => (
+                <StageColumn
+                  key={stageKey}
+                  stage={stageKey}
+                  initiatives={groupedInitiatives[stageKey]}
+                  stageInfo={stageInfo}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        </DragDropContext>
       )}
 
       {/* Empty State */}
@@ -158,6 +275,18 @@ const KanbanBoard = () => {
           </a>
         </div>
       )}
+
+      {/* Transition Confirmation Modal */}
+      <TransitionModal
+        isOpen={modalState.isOpen}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmTransition}
+        initiative={modalState.initiative}
+        fromStage={modalState.fromStage}
+        toStage={modalState.toStage}
+        isBackward={modalState.isBackward}
+        isSkipping={modalState.isSkipping}
+      />
     </div>
   );
 };

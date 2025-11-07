@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { Droppable } from '@hello-pangea/dnd';
 import InitiativeCard from './InitiativeCard';
 
 const StageColumn = ({ stage, initiatives, stageInfo }) => {
@@ -23,20 +24,35 @@ const StageColumn = ({ stage, initiatives, stageInfo }) => {
         <p className="text-xs text-gray-600 mt-1">{stageInfo.description}</p>
       </div>
 
-      {/* Column Body */}
-      <div className={`${stageInfo.bodyBgColor} rounded-b-lg p-4 min-h-[500px] max-h-[calc(100vh-300px)] overflow-y-auto`}>
-        <div className="space-y-3">
-          {initiatives.length === 0 ? (
-            <div className="text-center py-8 text-gray-400 text-sm">
-              No initiatives in this stage
+      {/* Column Body - Droppable Area */}
+      <Droppable droppableId={stage}>
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className={`${stageInfo.bodyBgColor} rounded-b-lg p-4 min-h-[500px] max-h-[calc(100vh-300px)] overflow-y-auto transition-colors ${
+              snapshot.isDraggingOver ? 'ring-2 ring-slate-500 ring-inset' : ''
+            }`}
+          >
+            <div className="space-y-3">
+              {initiatives.length === 0 && !snapshot.isDraggingOver ? (
+                <div className="text-center py-8 text-gray-400 text-sm">
+                  No initiatives in this stage
+                </div>
+              ) : (
+                initiatives.map((initiative, index) => (
+                  <InitiativeCard
+                    key={initiative.id}
+                    initiative={initiative}
+                    index={index}
+                  />
+                ))
+              )}
+              {provided.placeholder}
             </div>
-          ) : (
-            initiatives.map((initiative) => (
-              <InitiativeCard key={initiative.id} initiative={initiative} />
-            ))
-          )}
-        </div>
-      </div>
+          </div>
+        )}
+      </Droppable>
     </div>
   );
 };
