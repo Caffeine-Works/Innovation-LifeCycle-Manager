@@ -12,14 +12,21 @@ echo.
 set TESTS_PASSED=0
 set TESTS_FAILED=0
 
-REM Test 1: Check if database file exists
-echo Testing: Database file exists...
-if exist "server\data\innovation-manager.db" (
+REM Test 1: Check if MySQL is accessible
+echo Testing: MySQL is accessible...
+mysql -u root --password="" -e "SELECT 1" >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
     echo [OK] PASS
     set /a TESTS_PASSED+=1
 ) else (
-    echo [FAIL] FAIL
-    set /a TESTS_FAILED+=1
+    mysql -u root -e "SELECT 1" >nul 2>nul
+    if %ERRORLEVEL% EQU 0 (
+        echo [OK] PASS
+        set /a TESTS_PASSED+=1
+    ) else (
+        echo [FAIL] FAIL
+        set /a TESTS_FAILED+=1
+    )
 )
 
 REM Test 2: Check if backend is running
@@ -57,37 +64,39 @@ if %ERRORLEVEL% EQU 0 (
 
 REM Test 5: Check database has users
 echo Testing: Database has users...
-cd server
-for /f "tokens=*" %%i in ('npx --yes better-sqlite3 data\innovation-manager.db "SELECT COUNT(*) as count FROM users" --json 2^>nul ^| findstr /r "\"count\":[0-9]*"') do set USER_OUTPUT=%%i
-cd ..
-REM Extract count value from JSON (simple parsing)
-set USER_COUNT=0
-for /f "tokens=2 delims=:" %%a in ("%USER_OUTPUT%") do (
-    for /f "tokens=1 delims=," %%b in ("%%a") do set USER_COUNT=%%b
+for /f %%i in ('mysql -u root --password^=^"^" -sN -e "SELECT COUNT(*) FROM innovation_manager.users" 2^>nul') do set USER_COUNT=%%i
+if not defined USER_COUNT (
+    for /f %%i in ('mysql -u root -sN -e "SELECT COUNT(*) FROM innovation_manager.users" 2^>nul') do set USER_COUNT=%%i
 )
-if !USER_COUNT! GEQ 6 (
-    echo [OK] PASS (count: !USER_COUNT!^)
-    set /a TESTS_PASSED+=1
+if defined USER_COUNT (
+    if !USER_COUNT! GEQ 6 (
+        echo [OK] PASS (count: !USER_COUNT!^)
+        set /a TESTS_PASSED+=1
+    ) else (
+        echo [FAIL] FAIL
+        set /a TESTS_FAILED+=1
+    )
 ) else (
-    echo [FAIL] FAIL
+    echo [FAIL] FAIL - Could not query database
     set /a TESTS_FAILED+=1
 )
 
 REM Test 6: Check database has initiatives
 echo Testing: Database has initiatives...
-cd server
-for /f "tokens=*" %%i in ('npx --yes better-sqlite3 data\innovation-manager.db "SELECT COUNT(*) as count FROM initiatives" --json 2^>nul ^| findstr /r "\"count\":[0-9]*"') do set INITIATIVE_OUTPUT=%%i
-cd ..
-REM Extract count value from JSON (simple parsing)
-set INITIATIVE_COUNT=0
-for /f "tokens=2 delims=:" %%a in ("%INITIATIVE_OUTPUT%") do (
-    for /f "tokens=1 delims=," %%b in ("%%a") do set INITIATIVE_COUNT=%%b
+for /f %%i in ('mysql -u root --password^=^"^" -sN -e "SELECT COUNT(*) FROM innovation_manager.initiatives" 2^>nul') do set INITIATIVE_COUNT=%%i
+if not defined INITIATIVE_COUNT (
+    for /f %%i in ('mysql -u root -sN -e "SELECT COUNT(*) FROM innovation_manager.initiatives" 2^>nul') do set INITIATIVE_COUNT=%%i
 )
-if !INITIATIVE_COUNT! GEQ 12 (
-    echo [OK] PASS (count: !INITIATIVE_COUNT!^)
-    set /a TESTS_PASSED+=1
+if defined INITIATIVE_COUNT (
+    if !INITIATIVE_COUNT! GEQ 12 (
+        echo [OK] PASS (count: !INITIATIVE_COUNT!^)
+        set /a TESTS_PASSED+=1
+    ) else (
+        echo [FAIL] FAIL
+        set /a TESTS_FAILED+=1
+    )
 ) else (
-    echo [FAIL] FAIL
+    echo [FAIL] FAIL - Could not query database
     set /a TESTS_FAILED+=1
 )
 

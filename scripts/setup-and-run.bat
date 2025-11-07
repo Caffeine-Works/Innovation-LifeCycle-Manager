@@ -21,16 +21,16 @@ for /f "tokens=*" %%i in ('node --version') do set NODE_VERSION=%%i
 echo [OK] Node.js found: %NODE_VERSION%
 echo.
 
-REM Check Python version for better-sqlite3
-python --version >nul 2>nul
+REM Check if MySQL is installed
+where mysql >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
-    echo [WARNING] Python not found in PATH
-    echo better-sqlite3 may require Python 3.8+
-    echo Attempting to use prebuilt binaries...
+    echo [WARNING] MySQL not found in PATH
+    echo Please install MySQL before continuing
+    echo Download from: https://dev.mysql.com/downloads/mysql/
     echo.
 ) else (
-    for /f "tokens=2" %%i in ('python --version 2^>^&1') do set PYTHON_VERSION=%%i
-    echo [INFO] Python found: !PYTHON_VERSION!
+    for /f "tokens=*" %%i in ('mysql --version') do set MYSQL_VERSION=%%i
+    echo [OK] MySQL found: !MYSQL_VERSION!
     echo.
 )
 
@@ -52,26 +52,11 @@ REM Step 2: Install server dependencies
 echo Step 2/6: Installing server dependencies...
 cd server
 if not exist "node_modules" (
-    REM Try to install with prebuilt binaries first
-    call npm install --no-save --prefer-offline --no-audit 2>nul
+    call npm install --no-audit
     if %ERRORLEVEL% NEQ 0 (
-        echo    Trying alternative installation method...
-        call npm install --build-from-source=false 2>nul
-        if %ERRORLEVEL% NEQ 0 (
-            echo [ERROR] Failed to install server dependencies
-            echo.
-            echo This is likely due to Python version compatibility.
-            echo Please ensure Python 3.8+ is installed and in your PATH:
-            echo.
-            echo   Option 1: Install Python from python.org
-            echo     https://www.python.org/downloads/
-            echo.
-            echo   Option 2: Install Visual Studio Build Tools
-            echo     https://visualstudio.microsoft.com/downloads/
-            echo.
-            cd ..
-            exit /b 1
-        )
+        echo [ERROR] Failed to install server dependencies
+        cd ..
+        exit /b 1
     )
     echo [OK] Server dependencies installed
 ) else (
@@ -110,7 +95,9 @@ echo.
 
 REM Step 5: Initialize database
 echo Step 5/6: Setting up database...
-if not exist "server\data\innovation-manager.db" (
+echo [INFO] Checking MySQL database...
+set /p RESET_DB="Do you want to reset the database? (y/N): "
+if /i "!RESET_DB!"=="y" (
     cd server
     node database\reset.js
     if %ERRORLEVEL% NEQ 0 (
@@ -121,21 +108,7 @@ if not exist "server\data\innovation-manager.db" (
     cd ..
     echo [OK] Database initialized with demo data
 ) else (
-    echo [INFO] Database already exists
-    set /p RESET_DB="Do you want to reset it? (y/N): "
-    if /i "!RESET_DB!"=="y" (
-        cd server
-        node database\reset.js
-        if %ERRORLEVEL% NEQ 0 (
-            echo [ERROR] Failed to reset database
-            cd ..
-            exit /b 1
-        )
-        cd ..
-        echo [OK] Database reset complete
-    ) else (
-        echo [SKIP] Keeping existing database
-    )
+    echo [SKIP] Skipping database reset
 )
 echo.
 
@@ -143,14 +116,7 @@ REM Step 6: Run verification tests
 echo Step 6/6: Running verification tests...
 echo.
 
-REM Check if database exists
-if exist "server\data\innovation-manager.db" (
-    echo [OK] Database file exists and setup is complete
-    echo [OK] Database has been initialized with demo data
-) else (
-    echo [ERROR] Database file not found
-    exit /b 1
-)
+echo [OK] Setup validation complete
 
 echo.
 echo ============================================

@@ -69,19 +69,21 @@
 
 ### Database
 
-**Primary Database**: SQLite3
+**Primary Database**: MySQL
 **Why**:
-- ✅ No installation required
-- ✅ No admin rights needed
-- ✅ File-based (single .db file)
-- ✅ Zero configuration
-- ✅ Sufficient for demo and small-scale production
-- ✅ Can be upgraded to PostgreSQL later without major code changes
+- ✅ Production-ready relational database
+- ✅ Wide industry adoption and support
+- ✅ Excellent performance for medium to large-scale applications
+- ✅ ACID compliant with strong data integrity
+- ✅ Rich ecosystem of tools and libraries
+- ✅ Can scale vertically and horizontally
 
-**ORM/Query Builder**: Better-SQLite3 + Knex.js
+**Database Driver**: mysql2
 **Why**:
-- `better-sqlite3`: Synchronous API, faster than async sqlite3
-- `knex.js`: Query builder, migrations, works with multiple databases
+- Modern MySQL client for Node.js
+- Promise-based API
+- Supports prepared statements
+- Better performance than older mysql package
 
 **AI/Vector Storage**: In-memory cache + Claude API
 **Why**:
