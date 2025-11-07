@@ -1,86 +1,59 @@
 /**
  * Database Configuration
- * Manages SQLite database connection using sql.js (pure JavaScript, no compilation)
+ * Manages MySQL database connection using mysql2
  */
 
-import initSqlJs from 'sql.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Database path from environment or default
-const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, '../../data/innovation-manager.db');
+dotenv.config();
 
 /**
- * Database instance (sql.js)
+ * Database connection pool
  */
-let dbInstance = null;
-let SQL = null;
+let pool = null;
 
 /**
- * Initialize sql.js
- */
-async function initSQL() {
-  if (!SQL) {
-    SQL = await initSqlJs();
-  }
-  return SQL;
-}
-
-/**
- * Get database instance
- * Returns sql.js Database object
+ * Get database connection pool
  */
 export async function getDatabase() {
-  if (dbInstance) {
-    return dbInstance;
+  if (pool) {
+    return pool;
   }
 
-  // Initialize sql.js
-  await initSQL();
+  try {
+    pool = mysql.createPool({
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '3306'),
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'innovation_manager',
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 0
+    });
 
-  // Check if database file exists
-  if (!fs.existsSync(DB_PATH)) {
-    throw new Error(
-      `Database not found at ${DB_PATH}. Please run 'npm run db:reset' to create it.`
-    );
+    // Test the connection
+    const connection = await pool.getConnection();
+    console.log('✅ Database connected:', process.env.DB_NAME || 'innovation_manager');
+    connection.release();
+
+    return pool;
+  } catch (error) {
+    console.error('❌ Database connection failed:', error.message);
+    throw error;
   }
-
-  // Load database from file
-  const buffer = fs.readFileSync(DB_PATH);
-  dbInstance = new SQL.Database(buffer);
-
-  console.log('✅ Database connected:', DB_PATH);
-
-  return dbInstance;
 }
 
 /**
- * Save database to file
- * sql.js keeps database in memory, so we need to explicitly save changes
+ * Close database connection pool
  */
-export function saveDatabase() {
-  if (!dbInstance) {
-    throw new Error('Database not initialized');
-  }
-
-  const data = dbInstance.export();
-  const buffer = Buffer.from(data);
-  fs.writeFileSync(DB_PATH, buffer);
-}
-
-/**
- * Close database connection
- */
-export function closeDatabase() {
-  if (dbInstance) {
-    // Save before closing
-    saveDatabase();
-    dbInstance.close();
-    dbInstance = null;
+export async function closeDatabase() {
+  if (pool) {
+    await pool.end();
+    pool = null;
     console.log('📪 Database connection closed');
   }
 }
@@ -90,19 +63,8 @@ export function closeDatabase() {
  */
 export async function query(sql, params = []) {
   const db = await getDatabase();
-  const stmt = db.prepare(sql);
-
-  if (params.length > 0) {
-    stmt.bind(params);
-  }
-
-  const results = [];
-  while (stmt.step()) {
-    results.push(stmt.getAsObject());
-  }
-  stmt.free();
-
-  return results;
+  const [rows] = await db.execute(sql, params);
+  return rows;
 }
 
 /**
@@ -118,8 +80,8 @@ export async function queryOne(sql, params = []) {
  */
 export async function execute(sql, params = []) {
   const db = await getDatabase();
-  db.run(sql, params);
-  saveDatabase(); // Auto-save after write operations
+  const [result] = await db.execute(sql, params);
+  return result;
 }
 
 /**
@@ -127,8 +89,24 @@ export async function execute(sql, params = []) {
  */
 export async function executeBatch(sqlStatements) {
   const db = await getDatabase();
-  db.exec(sqlStatements);
-  saveDatabase();
+  const connection = await db.getConnection();
+
+  try {
+    // Split statements and execute one by one
+    const statements = sqlStatements
+      .split(';')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    for (const statement of statements) {
+      await connection.execute(statement);
+    }
+
+    connection.release();
+  } catch (error) {
+    connection.release();
+    throw error;
+  }
 }
 
 /**
@@ -147,7 +125,6 @@ export function handleDatabaseError(error) {
 export default {
   getDatabase,
   closeDatabase,
-  saveDatabase,
   query,
   queryOne,
   execute,
