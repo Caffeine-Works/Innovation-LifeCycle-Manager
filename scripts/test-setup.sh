@@ -35,8 +35,8 @@ run_test() {
     fi
 }
 
-# 1. Check if MySQL is running
-run_test "MySQL is accessible" "mysql -u root --password='' -e 'SELECT 1' &> /dev/null || mysql -u root -e 'SELECT 1' &> /dev/null"
+# 1. Check if database file exists
+run_test "Database file exists" "[ -f server/data/innovation-manager.db ]"
 
 # 2. Check if backend is running
 run_test "Backend health check" "curl -f -s http://localhost:3000/health > /dev/null"
@@ -53,24 +53,29 @@ else
     ((TESTS_FAILED++))
 fi
 
-# 5. Check database has users
-USER_COUNT=$(mysql -u root --password='' -e "SELECT COUNT(*) as count FROM innovation_manager.users" -sN 2>/dev/null || mysql -u root -e "SELECT COUNT(*) as count FROM innovation_manager.users" -sN 2>/dev/null)
-if [ -n "$USER_COUNT" ] && [ "$USER_COUNT" -ge 6 ]; then
-    echo -e "Testing: Database has users (count: $USER_COUNT)... ${GREEN}✅ PASS${NC}"
-    ((TESTS_PASSED++))
-else
-    echo -e "Testing: Database has users... ${RED}❌ FAIL${NC}"
-    ((TESTS_FAILED++))
-fi
+# 5. Check database has users (using sqlite3 if available)
+if command -v sqlite3 &> /dev/null; then
+    USER_COUNT=$(sqlite3 server/data/innovation-manager.db "SELECT COUNT(*) FROM users" 2>/dev/null)
+    if [ -n "$USER_COUNT" ] && [ "$USER_COUNT" -ge 6 ]; then
+        echo -e "Testing: Database has users (count: $USER_COUNT)... ${GREEN}✅ PASS${NC}"
+        ((TESTS_PASSED++))
+    else
+        echo -e "Testing: Database has users... ${RED}❌ FAIL${NC}"
+        ((TESTS_FAILED++))
+    fi
 
-# 6. Check database has initiatives
-INITIATIVE_COUNT=$(mysql -u root --password='' -e "SELECT COUNT(*) as count FROM innovation_manager.initiatives" -sN 2>/dev/null || mysql -u root -e "SELECT COUNT(*) as count FROM innovation_manager.initiatives" -sN 2>/dev/null)
-if [ -n "$INITIATIVE_COUNT" ] && [ "$INITIATIVE_COUNT" -ge 12 ]; then
-    echo -e "Testing: Database has initiatives (count: $INITIATIVE_COUNT)... ${GREEN}✅ PASS${NC}"
-    ((TESTS_PASSED++))
+    # 6. Check database has initiatives
+    INITIATIVE_COUNT=$(sqlite3 server/data/innovation-manager.db "SELECT COUNT(*) FROM initiatives" 2>/dev/null)
+    if [ -n "$INITIATIVE_COUNT" ] && [ "$INITIATIVE_COUNT" -ge 12 ]; then
+        echo -e "Testing: Database has initiatives (count: $INITIATIVE_COUNT)... ${GREEN}✅ PASS${NC}"
+        ((TESTS_PASSED++))
+    else
+        echo -e "Testing: Database has initiatives... ${RED}❌ FAIL${NC}"
+        ((TESTS_FAILED++))
+    fi
 else
-    echo -e "Testing: Database has initiatives... ${RED}❌ FAIL${NC}"
-    ((TESTS_FAILED++))
+    echo -e "Testing: Database has users... ${YELLOW}⏭️  SKIP (sqlite3 not installed)${NC}"
+    echo -e "Testing: Database has initiatives... ${YELLOW}⏭️  SKIP (sqlite3 not installed)${NC}"
 fi
 
 echo ""

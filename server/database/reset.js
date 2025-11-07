@@ -6,82 +6,66 @@
  * Usage: npm run db:reset
  */
 
-import mysql from 'mysql2/promise';
+import initSqlJs from 'sql.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Database file path
+const DB_PATH = path.join(__dirname, '..', 'data', 'innovation-manager.db');
 const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 const SEED_PATH = path.join(__dirname, 'seed.sql');
 
-// Database configuration
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306'),
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || ''
-};
-
-const dbName = process.env.DB_NAME || 'innovation_manager';
-
 console.log('🔄 Starting database reset...\n');
 
-let connection = null;
+// Ensure data directory exists
+const dataDir = path.dirname(DB_PATH);
+if (!fs.existsSync(dataDir)) {
+  console.log('📁 Creating data directory...');
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+// Delete existing database file if it exists
+if (fs.existsSync(DB_PATH)) {
+  console.log('🗑️  Removing existing database...');
+  fs.unlinkSync(DB_PATH);
+}
+
+// Initialize sql.js and create database
+console.log('✨ Creating new database...');
+
+const SQL = await initSqlJs();
+const db = new SQL.Database();
 
 try {
-  // Connect to MySQL server (without specifying database)
-  console.log('🗄️  Connecting to MySQL...');
-  connection = await mysql.createConnection(dbConfig);
-
-  // Drop database if exists and create new one
-  console.log('✨ Creating database...');
-  await connection.query(`DROP DATABASE IF EXISTS ${dbName}`);
-  await connection.query(`CREATE DATABASE ${dbName}`);
-  await connection.query(`USE ${dbName}`);
-
   // Read and execute schema
   console.log('📋 Creating schema...');
   const schema = fs.readFileSync(SCHEMA_PATH, 'utf8');
-
-  // Split by semicolons and execute each statement
-  const schemaStatements = schema
-    .split(';')
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
-
-  for (const statement of schemaStatements) {
-    await connection.query(statement);
-  }
+  db.exec(schema);
   console.log('✅ Schema created successfully');
 
   // Read and execute seed data
   console.log('🌱 Seeding data...');
   const seed = fs.readFileSync(SEED_PATH, 'utf8');
-
-  const seedStatements = seed
-    .split(';')
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
-
-  for (const statement of seedStatements) {
-    await connection.query(statement);
-  }
+  db.exec(seed);
   console.log('✅ Seed data inserted successfully');
 
-  // Verify data was inserted
-  const [userCountResult] = await connection.query('SELECT COUNT(*) as count FROM users');
-  const [initiativeCountResult] = await connection.query('SELECT COUNT(*) as count FROM initiatives');
-  const [transitionCountResult] = await connection.query('SELECT COUNT(*) as count FROM stage_transitions');
+  // Save database to file
+  const data = db.export();
+  const buffer = Buffer.from(data);
+  fs.writeFileSync(DB_PATH, buffer);
 
-  const userCount = userCountResult[0].count;
-  const initiativeCount = initiativeCountResult[0].count;
-  const transitionCount = transitionCountResult[0].count;
+  // Verify data was inserted
+  const userCountResult = db.exec('SELECT COUNT(*) as count FROM users');
+  const initiativeCountResult = db.exec('SELECT COUNT(*) as count FROM initiatives');
+  const transitionCountResult = db.exec('SELECT COUNT(*) as count FROM stage_transitions');
+
+  const userCount = userCountResult[0].values[0][0];
+  const initiativeCount = initiativeCountResult[0].values[0][0];
+  const transitionCount = transitionCountResult[0].values[0][0];
 
   console.log('\n📊 Database Statistics:');
   console.log(`   Users: ${userCount}`);
@@ -89,30 +73,28 @@ try {
   console.log(`   Stage Transitions: ${transitionCount}`);
 
   console.log('\n✅ Database reset completed successfully!');
-  console.log(`📍 Database: ${dbName}\n`);
+  console.log(`📍 Database location: ${DB_PATH}\n`);
 
   // Display demo user credentials
   console.log('🔑 Demo User Credentials:');
-  const [users] = await connection.query('SELECT email, role FROM users ORDER BY id');
+  const users = db.exec('SELECT email, role FROM users ORDER BY id');
 
-  users.forEach(user => {
-    console.log(`   ${user.email} (${user.role}) - Password: demo123`);
-  });
+  if (users.length > 0 && users[0].values) {
+    users[0].values.forEach(row => {
+      console.log(`   ${row[0]} (${row[1]}) - Password: demo123`);
+    });
+  }
 
   console.log('\n✨ Ready to start the server!\n');
 
-  // Close connection
-  await connection.end();
+  // Close database
+  db.close();
 
   process.exit(0);
 
 } catch (error) {
   console.error('❌ Error resetting database:', error.message);
   console.error(error);
-
-  if (connection) {
-    await connection.end();
-  }
-
+  db.close();
   process.exit(1);
 }

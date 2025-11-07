@@ -118,21 +118,20 @@ npm run db:reset              # Drops all tables and recreates with seed data
 
 ## 📊 Database
 
-- **Type**: MySQL
-- **Host**: localhost (default)
-- **Database**: innovation_manager
+- **Type**: SQLite (using sql.js)
+- **Location**: `server/data/innovation-manager.db`
 - **Tables**: users, initiatives, stage_transitions, ai_interactions
 - **Demo Data**: 6 users, 12 initiatives across 4 stages
 
 ### Inspect Database
 ```bash
-# Connect to MySQL
-mysql -u root -p innovation_manager
+# You can use any SQLite browser, or the sqlite3 CLI:
+sqlite3 server/data/innovation-manager.db
 
 # SQL commands:
 SELECT * FROM users;
 SELECT * FROM initiatives;
-EXIT;
+.exit
 ```
 
 ---
@@ -143,7 +142,7 @@ EXIT;
 |-----------|-----------|
 | **Frontend** | React 18 + Vite + Tailwind CSS |
 | **Backend** | Node.js + Express.js |
-| **Database** | MySQL (mysql2) |
+| **Database** | SQLite (sql.js) |
 | **AI** | Anthropic Claude API (future) |
 
 ---
@@ -179,22 +178,6 @@ lsof -ti:5173 | xargs kill
 # Reset database
 npm run db:reset
 ```
-
-### MySQL installation
-**macOS:**
-```bash
-brew install mysql
-brew services start mysql
-```
-
-**Ubuntu/Debian:**
-```bash
-sudo apt-get install mysql-server
-sudo systemctl start mysql
-```
-
-**Windows:**
-Download and install from https://dev.mysql.com/downloads/mysql/
 
 ### Clear and reinstall
 ```bash

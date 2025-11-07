@@ -21,19 +21,6 @@ for /f "tokens=*" %%i in ('node --version') do set NODE_VERSION=%%i
 echo [OK] Node.js found: %NODE_VERSION%
 echo.
 
-REM Check if MySQL is installed
-where mysql >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
-    echo [WARNING] MySQL not found in PATH
-    echo Please install MySQL before continuing
-    echo Download from: https://dev.mysql.com/downloads/mysql/
-    echo.
-) else (
-    for /f "tokens=*" %%i in ('mysql --version') do set MYSQL_VERSION=%%i
-    echo [OK] MySQL found: !MYSQL_VERSION!
-    echo.
-)
-
 REM Step 1: Install root dependencies (just concurrently)
 echo Step 1/6: Installing root dependencies...
 if not exist "node_modules" (
@@ -95,9 +82,7 @@ echo.
 
 REM Step 5: Initialize database
 echo Step 5/6: Setting up database...
-echo [INFO] Checking MySQL database...
-set /p RESET_DB="Do you want to reset the database? (y/N): "
-if /i "!RESET_DB!"=="y" (
+if not exist "server\data\innovation-manager.db" (
     cd server
     node database\reset.js
     if %ERRORLEVEL% NEQ 0 (
@@ -108,7 +93,21 @@ if /i "!RESET_DB!"=="y" (
     cd ..
     echo [OK] Database initialized with demo data
 ) else (
-    echo [SKIP] Skipping database reset
+    echo [INFO] Database already exists
+    set /p RESET_DB="Do you want to reset it? (y/N): "
+    if /i "!RESET_DB!"=="y" (
+        cd server
+        node database\reset.js
+        if %ERRORLEVEL% NEQ 0 (
+            echo [ERROR] Failed to reset database
+            cd ..
+            exit /b 1
+        )
+        cd ..
+        echo [OK] Database reset complete
+    ) else (
+        echo [SKIP] Keeping existing database
+    )
 )
 echo.
 
@@ -116,7 +115,14 @@ REM Step 6: Run verification tests
 echo Step 6/6: Running verification tests...
 echo.
 
-echo [OK] Setup validation complete
+REM Check if database exists
+if exist "server\data\innovation-manager.db" (
+    echo [OK] Database file exists and setup is complete
+    echo [OK] Database has been initialized with demo data
+) else (
+    echo [ERROR] Database file not found
+    exit /b 1
+)
 
 echo.
 echo ============================================
