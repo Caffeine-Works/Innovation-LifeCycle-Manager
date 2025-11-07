@@ -35,7 +35,7 @@ function AppContent() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-slate-900 border-b-4 border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-4xl font-bold text-white tracking-tight">
@@ -97,7 +97,7 @@ function AppContent() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <main className="w-full px-4 py-8 sm:px-6 lg:px-8">
         {apiStatus === 'error' ? (
           <div className="card max-w-2xl mx-auto">
             <div className="text-center">

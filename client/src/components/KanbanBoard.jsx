@@ -83,7 +83,7 @@ const KanbanBoard = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8 max-w-7xl mx-auto">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold text-slate-900 mb-3 tracking-tight">
@@ -129,8 +129,8 @@ const KanbanBoard = () => {
 
       {/* Kanban Board */}
       {!loading && !error && (
-        <div className="overflow-x-auto pb-4">
-          <div className="flex gap-6 min-w-max">
+        <div className="overflow-x-auto pb-6">
+          <div className="flex gap-4 justify-center">
             {Object.entries(stages).map(([stageKey, stageInfo]) => (
               <StageColumn
                 key={stageKey}
