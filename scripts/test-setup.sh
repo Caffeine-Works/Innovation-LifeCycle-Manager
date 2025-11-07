@@ -35,8 +35,8 @@ run_test() {
     fi
 }
 
-# 1. Check if database file exists
-run_test "Database file exists" "[ -f server/data/innovation-manager.db ]"
+# 1. Check if MySQL is running
+run_test "MySQL is accessible" "mysql -u root --password='' -e 'SELECT 1' &> /dev/null || mysql -u root -e 'SELECT 1' &> /dev/null"
 
 # 2. Check if backend is running
 run_test "Backend health check" "curl -f -s http://localhost:3000/health > /dev/null"
@@ -54,8 +54,8 @@ else
 fi
 
 # 5. Check database has users
-USER_COUNT=$(cd server && npx --yes better-sqlite3 data/innovation-manager.db "SELECT COUNT(*) as count FROM users" --json 2>/dev/null | grep -o '"count":[0-9]*' | grep -o '[0-9]*')
-if [ "$USER_COUNT" -ge 6 ]; then
+USER_COUNT=$(mysql -u root --password='' -e "SELECT COUNT(*) as count FROM innovation_manager.users" -sN 2>/dev/null || mysql -u root -e "SELECT COUNT(*) as count FROM innovation_manager.users" -sN 2>/dev/null)
+if [ -n "$USER_COUNT" ] && [ "$USER_COUNT" -ge 6 ]; then
     echo -e "Testing: Database has users (count: $USER_COUNT)... ${GREEN}✅ PASS${NC}"
     ((TESTS_PASSED++))
 else
@@ -64,8 +64,8 @@ else
 fi
 
 # 6. Check database has initiatives
-INITIATIVE_COUNT=$(cd server && npx --yes better-sqlite3 data/innovation-manager.db "SELECT COUNT(*) as count FROM initiatives" --json 2>/dev/null | grep -o '"count":[0-9]*' | grep -o '[0-9]*')
-if [ "$INITIATIVE_COUNT" -ge 12 ]; then
+INITIATIVE_COUNT=$(mysql -u root --password='' -e "SELECT COUNT(*) as count FROM innovation_manager.initiatives" -sN 2>/dev/null || mysql -u root -e "SELECT COUNT(*) as count FROM innovation_manager.initiatives" -sN 2>/dev/null)
+if [ -n "$INITIATIVE_COUNT" ] && [ "$INITIATIVE_COUNT" -ge 12 ]; then
     echo -e "Testing: Database has initiatives (count: $INITIATIVE_COUNT)... ${GREEN}✅ PASS${NC}"
     ((TESTS_PASSED++))
 else

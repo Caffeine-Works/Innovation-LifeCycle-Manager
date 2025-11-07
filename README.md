@@ -118,20 +118,21 @@ npm run db:reset              # Drops all tables and recreates with seed data
 
 ## 📊 Database
 
-- **Type**: SQLite3
-- **Location**: `server/data/innovation-manager.db`
+- **Type**: MySQL
+- **Host**: localhost (default)
+- **Database**: innovation_manager
 - **Tables**: users, initiatives, stage_transitions, ai_interactions
 - **Demo Data**: 6 users, 12 initiatives across 4 stages
 
 ### Inspect Database
 ```bash
-cd server
-npx better-sqlite3 data/innovation-manager.db
+# Connect to MySQL
+mysql -u root -p innovation_manager
 
 # SQL commands:
 SELECT * FROM users;
 SELECT * FROM initiatives;
-.exit
+EXIT;
 ```
 
 ---
@@ -142,7 +143,7 @@ SELECT * FROM initiatives;
 |-----------|-----------|
 | **Frontend** | React 18 + Vite + Tailwind CSS |
 | **Backend** | Node.js + Express.js |
-| **Database** | SQLite3 (better-sqlite3) |
+| **Database** | MySQL (mysql2) |
 | **AI** | Anthropic Claude API (future) |
 
 ---
@@ -179,16 +180,21 @@ lsof -ti:5173 | xargs kill
 npm run db:reset
 ```
 
-### SQLite installation fails
+### MySQL installation
 **macOS:**
 ```bash
-xcode-select --install
+brew install mysql
+brew services start mysql
 ```
 
 **Ubuntu/Debian:**
 ```bash
-sudo apt-get install build-essential python3
+sudo apt-get install mysql-server
+sudo systemctl start mysql
 ```
+
+**Windows:**
+Download and install from https://dev.mysql.com/downloads/mysql/
 
 ### Clear and reinstall
 ```bash

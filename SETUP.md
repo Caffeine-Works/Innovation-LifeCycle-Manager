@@ -26,7 +26,7 @@ cd ..
 
 This installs:
 - express
-- better-sqlite3 (SQLite database)
+- mysql2 (MySQL database driver)
 - cors, helmet (security)
 - morgan (logging)
 - bcrypt, jsonwebtoken (authentication)
@@ -63,7 +63,7 @@ Edit `.env` if needed. For now, defaults are fine. You'll add the Anthropic API 
 
 ## Step 5: Initialize Database
 
-This creates the SQLite database, tables, and seeds demo data:
+This creates the MySQL database, tables, and seeds demo data:
 
 ```bash
 npm run db:reset
@@ -72,8 +72,8 @@ npm run db:reset
 Expected output:
 ```
 🔄 Starting database reset...
-📁 Creating data directory...
-✨ Creating new database...
+🗄️  Connecting to MySQL...
+✨ Creating database...
 📋 Creating schema...
 ✅ Schema created successfully
 🌱 Seeding data...
@@ -85,7 +85,7 @@ Expected output:
    Stage Transitions: 3
 
 ✅ Database reset completed successfully!
-📍 Database location: /path/to/server/data/innovation-manager.db
+📍 Database: innovation_manager
 
 🔑 Demo User Credentials:
    employee@demo.com (EMPLOYEE) - Password: demo123
@@ -155,25 +155,15 @@ You should see:
 
 ## Step 8: Verify Database
 
-Check that the database file was created:
+You can inspect the database using the MySQL client:
 
 ```bash
-ls -lh server/data/
-
-# Should show:
-# innovation-manager.db
-```
-
-You can inspect the database with any SQLite browser, or use:
-
-```bash
-cd server
-npx better-sqlite3 data/innovation-manager.db
+mysql -u root -p innovation_manager
 
 # Then run SQL:
 # SELECT COUNT(*) FROM users;      -- Should return 6
 # SELECT COUNT(*) FROM initiatives; -- Should return 12
-# .exit
+# EXIT;
 ```
 
 ---
@@ -198,24 +188,24 @@ lsof -ti:5173 | xargs kill
 
 Or change ports in `.env` (for backend) and `client/vite.config.js` (for frontend).
 
-### SQLite installation issues
+### MySQL installation
 
-If `better-sqlite3` fails to install, you may need to install build tools:
+If MySQL is not installed:
 
 **macOS:**
 ```bash
-xcode-select --install
+brew install mysql
+brew services start mysql
 ```
 
 **Ubuntu/Debian:**
 ```bash
-sudo apt-get install build-essential python3
+sudo apt-get install mysql-server
+sudo systemctl start mysql
 ```
 
 **Windows:**
-```bash
-npm install --global windows-build-tools
-```
+Download and install from https://dev.mysql.com/downloads/mysql/
 
 ---
 
@@ -240,7 +230,7 @@ Innovation-LifeCycle-Manager/
 │   │   ├── seed.sql     ← Demo data
 │   │   └── reset.js     ← Reset script
 │   └── data/
-│       └── innovation-manager.db ← SQLite database
+│       └── (MySQL database - external)
 │
 └── client/              ← Frontend
     ├── package.json
