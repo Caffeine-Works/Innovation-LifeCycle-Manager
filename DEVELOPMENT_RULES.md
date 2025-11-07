@@ -24,6 +24,39 @@
 
 ## GitHub Issues Integration
 
+GitHub Issues are the **single source of truth** for project tasks. The TodoWrite tool (session todo list) must stay synchronized with GitHub Issues.
+
+### TodoWrite ↔ GitHub Issues Synchronization
+
+**At Session Start**:
+1. Fetch current open issues from GitHub:
+   ```bash
+   gh issue list --state open --json number,title,state
+   ```
+2. Load these issues into TodoWrite to track work during the session
+3. Match TodoWrite items to issue numbers (e.g., "Implement Authentication - Issue #4")
+
+**During Development**:
+1. Update TodoWrite status as you work (pending → in_progress → completed)
+2. Keep issue references in TodoWrite items (e.g., "Issue #4", "Issue #5")
+3. One TodoWrite item per GitHub Issue for major features
+
+**After Completing Work**:
+1. Use `gh` commands to update GitHub Issues directly:
+   ```bash
+   # Add progress comment to issue
+   gh issue comment 4 --body "Login page completed with email dropdown"
+
+   # Close completed issue
+   gh issue close 4 --comment "Authentication fully implemented and tested"
+   ```
+2. Commit messages automatically update issues via keywords (see below)
+
+**Important**:
+- Do NOT use GITHUB_ISSUES_INIT.md as an intermediary
+- GitHub Issues are updated via `gh` CLI commands or commit message keywords
+- TodoWrite is session-only and helps track immediate work
+
 ### Commit Message Format
 ```
 <type>: <description>
@@ -33,7 +66,7 @@ Updates #<issue-number>
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-Co-Authored-By: Claude <noreply@anthropic.com>
+Co-Authored-By: Julien <32256332+Gouliath1@users.noreply.github.com>
 ```
 
 ### Required Actions Per Commit
@@ -54,15 +87,15 @@ Co-Authored-By: Claude <noreply@anthropic.com>
    ```bash
    git commit -m "feat: Add authentication
 
-   Updates #5 - Implemented login flow
+   Updates #4 - Implemented login flow
 
    🤖 Generated with [Claude Code](https://claude.com/claude-code)
-   Co-Authored-By: Claude <noreply@anthropic.com>"
+   Co-Authored-By: Julien <32256332+Gouliath1@users.noreply.github.com>"
    ```
 
 3. **After commit**: Verify issue was updated
    ```bash
-   gh issue view 5
+   gh issue view 4
    ```
 
 ---
@@ -115,3 +148,4 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ---
 
 *Last Updated: 2025-11-07*
+*TodoWrite/GitHub Issues sync workflow added*
