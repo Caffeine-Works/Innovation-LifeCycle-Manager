@@ -61,7 +61,7 @@
 - `helmet` - Security headers
 - `express-validator` - Request validation
 - `jsonwebtoken` - JWT authentication
-- `bcrypt` - Password hashing
+- `bcryptjs` - Password hashing (pure JavaScript, no compilation)
 - `dotenv` - Environment variables
 - `morgan` - HTTP request logging
 
@@ -69,21 +69,22 @@
 
 ### Database
 
-**Primary Database**: MySQL
+**Primary Database**: SQLite (sql.js)
 **Why**:
-- ✅ Production-ready relational database
-- ✅ Wide industry adoption and support
-- ✅ Excellent performance for medium to large-scale applications
-- ✅ ACID compliant with strong data integrity
-- ✅ Rich ecosystem of tools and libraries
-- ✅ Can scale vertically and horizontally
+- ✅ No installation required
+- ✅ No admin rights needed
+- ✅ File-based (single .db file)
+- ✅ Zero configuration
+- ✅ Pure JavaScript (no native compilation)
+- ✅ Sufficient for demo and small-scale production
+- ✅ Can be upgraded to PostgreSQL/MySQL later without major code changes
 
-**Database Driver**: mysql2
+**Database Driver**: sql.js
 **Why**:
-- Modern MySQL client for Node.js
-- Promise-based API
-- Supports prepared statements
-- Better performance than older mysql package
+- Pure JavaScript port of SQLite (WebAssembly)
+- No compilation required (works on Windows without build tools)
+- Synchronous and async API support
+- Perfect for development and demos
 
 **AI/Vector Storage**: In-memory cache + Claude API
 **Why**:

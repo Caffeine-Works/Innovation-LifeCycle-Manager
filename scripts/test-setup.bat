@@ -12,21 +12,14 @@ echo.
 set TESTS_PASSED=0
 set TESTS_FAILED=0
 
-REM Test 1: Check if MySQL is accessible
-echo Testing: MySQL is accessible...
-mysql -u root --password="" -e "SELECT 1" >nul 2>nul
-if %ERRORLEVEL% EQU 0 (
+REM Test 1: Check if database file exists
+echo Testing: Database file exists...
+if exist "server\data\innovation-manager.db" (
     echo [OK] PASS
     set /a TESTS_PASSED+=1
 ) else (
-    mysql -u root -e "SELECT 1" >nul 2>nul
-    if %ERRORLEVEL% EQU 0 (
-        echo [OK] PASS
-        set /a TESTS_PASSED+=1
-    ) else (
-        echo [FAIL] FAIL
-        set /a TESTS_FAILED+=1
-    )
+    echo [FAIL] FAIL
+    set /a TESTS_FAILED+=1
 )
 
 REM Test 2: Check if backend is running
@@ -62,42 +55,45 @@ if %ERRORLEVEL% EQU 0 (
     set /a TESTS_FAILED+=1
 )
 
-REM Test 5: Check database has users
+REM Test 5 & 6: Check database (skip detailed checks on Windows without sqlite3)
 echo Testing: Database has users...
-for /f %%i in ('mysql -u root --password^=^"^" -sN -e "SELECT COUNT(*) FROM innovation_manager.users" 2^>nul') do set USER_COUNT=%%i
-if not defined USER_COUNT (
-    for /f %%i in ('mysql -u root -sN -e "SELECT COUNT(*) FROM innovation_manager.users" 2^>nul') do set USER_COUNT=%%i
-)
-if defined USER_COUNT (
-    if !USER_COUNT! GEQ 6 (
-        echo [OK] PASS (count: !USER_COUNT!^)
-        set /a TESTS_PASSED+=1
+where sqlite3 >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    for /f %%i in ('sqlite3 server\data\innovation-manager.db "SELECT COUNT(*) FROM users" 2^>nul') do set USER_COUNT=%%i
+    if defined USER_COUNT (
+        if !USER_COUNT! GEQ 6 (
+            echo [OK] PASS (count: !USER_COUNT!^)
+            set /a TESTS_PASSED+=1
+        ) else (
+            echo [FAIL] FAIL
+            set /a TESTS_FAILED+=1
+        )
     ) else (
         echo [FAIL] FAIL
         set /a TESTS_FAILED+=1
     )
 ) else (
-    echo [FAIL] FAIL - Could not query database
-    set /a TESTS_FAILED+=1
+    echo [SKIP] SKIP (sqlite3 not installed^)
 )
 
-REM Test 6: Check database has initiatives
 echo Testing: Database has initiatives...
-for /f %%i in ('mysql -u root --password^=^"^" -sN -e "SELECT COUNT(*) FROM innovation_manager.initiatives" 2^>nul') do set INITIATIVE_COUNT=%%i
-if not defined INITIATIVE_COUNT (
-    for /f %%i in ('mysql -u root -sN -e "SELECT COUNT(*) FROM innovation_manager.initiatives" 2^>nul') do set INITIATIVE_COUNT=%%i
-)
-if defined INITIATIVE_COUNT (
-    if !INITIATIVE_COUNT! GEQ 12 (
-        echo [OK] PASS (count: !INITIATIVE_COUNT!^)
-        set /a TESTS_PASSED+=1
+where sqlite3 >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    for /f %%i in ('sqlite3 server\data\innovation-manager.db "SELECT COUNT(*) FROM initiatives" 2^>nul') do set INITIATIVE_COUNT=%%i
+    if defined INITIATIVE_COUNT (
+        if !INITIATIVE_COUNT! GEQ 12 (
+            echo [OK] PASS (count: !INITIATIVE_COUNT!^)
+            set /a TESTS_PASSED+=1
+        ) else (
+            echo [FAIL] FAIL
+            set /a TESTS_FAILED+=1
+        )
     ) else (
         echo [FAIL] FAIL
         set /a TESTS_FAILED+=1
     )
 ) else (
-    echo [FAIL] FAIL - Could not query database
-    set /a TESTS_FAILED+=1
+    echo [SKIP] SKIP (sqlite3 not installed^)
 )
 
 echo.

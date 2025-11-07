@@ -26,10 +26,10 @@ cd ..
 
 This installs:
 - express
-- mysql2 (MySQL database driver)
+- sql.js (SQLite database - pure JavaScript, no compilation)
 - cors, helmet (security)
 - morgan (logging)
-- bcrypt, jsonwebtoken (authentication)
+- bcryptjs, jsonwebtoken (authentication)
 - dotenv (environment variables)
 
 ---
@@ -63,7 +63,7 @@ Edit `.env` if needed. For now, defaults are fine. You'll add the Anthropic API 
 
 ## Step 5: Initialize Database
 
-This creates the MySQL database, tables, and seeds demo data:
+This creates the SQLite database, tables, and seeds demo data:
 
 ```bash
 npm run db:reset
@@ -72,8 +72,8 @@ npm run db:reset
 Expected output:
 ```
 🔄 Starting database reset...
-🗄️  Connecting to MySQL...
-✨ Creating database...
+📁 Creating data directory...
+✨ Creating new database...
 📋 Creating schema...
 ✅ Schema created successfully
 🌱 Seeding data...
@@ -85,7 +85,7 @@ Expected output:
    Stage Transitions: 3
 
 ✅ Database reset completed successfully!
-📍 Database: innovation_manager
+📍 Database location: /path/to/server/data/innovation-manager.db
 
 🔑 Demo User Credentials:
    employee@demo.com (EMPLOYEE) - Password: demo123
@@ -155,15 +155,24 @@ You should see:
 
 ## Step 8: Verify Database
 
-You can inspect the database using the MySQL client:
+Check that the database file was created:
 
 ```bash
-mysql -u root -p innovation_manager
+ls -lh server/data/
+
+# Should show:
+# innovation-manager.db
+```
+
+You can inspect the database with any SQLite browser, or use the sqlite3 CLI:
+
+```bash
+sqlite3 server/data/innovation-manager.db
 
 # Then run SQL:
 # SELECT COUNT(*) FROM users;      -- Should return 6
 # SELECT COUNT(*) FROM initiatives; -- Should return 12
-# EXIT;
+# .exit
 ```
 
 ---
@@ -188,25 +197,6 @@ lsof -ti:5173 | xargs kill
 
 Or change ports in `.env` (for backend) and `client/vite.config.js` (for frontend).
 
-### MySQL installation
-
-If MySQL is not installed:
-
-**macOS:**
-```bash
-brew install mysql
-brew services start mysql
-```
-
-**Ubuntu/Debian:**
-```bash
-sudo apt-get install mysql-server
-sudo systemctl start mysql
-```
-
-**Windows:**
-Download and install from https://dev.mysql.com/downloads/mysql/
-
 ---
 
 ## What Got Created
@@ -230,7 +220,7 @@ Innovation-LifeCycle-Manager/
 │   │   ├── seed.sql     ← Demo data
 │   │   └── reset.js     ← Reset script
 │   └── data/
-│       └── (MySQL database - external)
+│       └── innovation-manager.db ← SQLite database
 │
 └── client/              ← Frontend
     ├── package.json

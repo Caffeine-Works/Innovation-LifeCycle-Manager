@@ -26,16 +26,6 @@ fi
 echo -e "${GREEN}✅ Node.js found: $(node --version)${NC}"
 echo ""
 
-# Check if MySQL is running
-if command -v mysql &> /dev/null; then
-    echo -e "${GREEN}✅ MySQL found: $(mysql --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)${NC}"
-else
-    echo -e "${YELLOW}⚠️  Warning: MySQL not found${NC}"
-    echo -e "${YELLOW}   Please install MySQL before continuing${NC}"
-    echo ""
-fi
-echo ""
-
 # Step 1: Install root dependencies (just concurrently)
 echo "📦 Step 1/6: Installing root dependencies..."
 if [ ! -d "node_modules" ]; then
@@ -83,14 +73,19 @@ echo ""
 
 # Step 5: Initialize database
 echo "🗄️  Step 5/6: Setting up database..."
-echo -e "${YELLOW}ℹ️  Checking MySQL database...${NC}"
-read -p "Do you want to reset the database? (y/N): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
+if [ ! -f "server/data/innovation-manager.db" ]; then
     cd server && node database/reset.js && cd ..
     echo -e "${GREEN}✅ Database initialized with demo data${NC}"
 else
-    echo -e "${YELLOW}⏭️  Skipping database reset${NC}"
+    echo -e "${YELLOW}ℹ️  Database already exists${NC}"
+    read -p "Do you want to reset it? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        cd server && node database/reset.js && cd ..
+        echo -e "${GREEN}✅ Database reset complete${NC}"
+    else
+        echo -e "${YELLOW}⏭️  Keeping existing database${NC}"
+    fi
 fi
 echo ""
 
@@ -98,7 +93,14 @@ echo ""
 echo "🧪 Step 6/6: Running verification tests..."
 echo ""
 
-echo -e "${GREEN}✅ Setup validation complete${NC}"
+# Check if database exists
+if [ -f "server/data/innovation-manager.db" ]; then
+    echo -e "${GREEN}✅ Database file exists and setup is complete${NC}"
+    echo -e "${GREEN}✅ Database has been initialized with demo data${NC}"
+else
+    echo -e "${RED}❌ Database file not found${NC}"
+    exit 1
+fi
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
