@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { getAllInitiatives, updateInitiative } from '../services/api';
 import StageColumn from './StageColumn';
@@ -13,6 +14,10 @@ const KanbanBoard = () => {
   const [initiatives, setInitiatives] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Get selected category from URL or default to 'ALL'
+  const selectedCategory = searchParams.get('category') || 'ALL';
 
   // Modal state for transition confirmation
   const [modalState, setModalState] = useState({
@@ -64,6 +69,15 @@ const KanbanBoard = () => {
     }
   };
 
+  // Category configuration
+  const categories = {
+    ALL: { label: 'All', icon: '📋', color: 'bg-slate-800' },
+    TECHNOLOGY: { label: 'Technology', icon: '💻', color: 'bg-blue-600' },
+    PROCESS: { label: 'Process', icon: '⚙️', color: 'bg-green-600' },
+    PRODUCT: { label: 'Product', icon: '📦', color: 'bg-purple-600' },
+    OTHER: { label: 'Other', icon: '🔖', color: 'bg-gray-600' }
+  };
+
   // Fetch initiatives on component mount
   useEffect(() => {
     fetchInitiatives();
@@ -83,14 +97,40 @@ const KanbanBoard = () => {
     }
   };
 
-  // Group initiatives by stage
+  /**
+   * Handle category filter change
+   * @param {string} category - Category to filter by
+   */
+  const handleCategoryChange = (category) => {
+    if (category === 'ALL') {
+      setSearchParams({}); // Remove category param
+    } else {
+      setSearchParams({ category });
+    }
+  };
+
+  // Filter initiatives by selected category
+  const filteredInitiatives = selectedCategory === 'ALL'
+    ? initiatives
+    : initiatives.filter(i => i.category === selectedCategory);
+
+  // Group filtered initiatives by stage
   const groupedInitiatives = Object.keys(stages).reduce((acc, stage) => {
-    acc[stage] = initiatives.filter(i => i.current_stage === stage);
+    acc[stage] = filteredInitiatives.filter(i => i.current_stage === stage);
     return acc;
   }, {});
 
-  // Calculate total count
+  // Calculate counts
   const totalCount = initiatives.length;
+  const filteredCount = filteredInitiatives.length;
+  const categoryCounts = Object.keys(categories).reduce((acc, cat) => {
+    if (cat === 'ALL') {
+      acc[cat] = totalCount;
+    } else {
+      acc[cat] = initiatives.filter(i => i.category === cat).length;
+    }
+    return acc;
+  }, {});
 
   // Get stage order for detecting backward/skipping moves
   const stageOrder = ['IDEA', 'CONCEPT', 'DEVELOPMENT', 'DEPLOYED'];
@@ -209,8 +249,40 @@ const KanbanBoard = () => {
             </p>
           </div>
           <div className="text-right">
-            <div className="text-5xl font-bold text-slate-900">{totalCount}</div>
-            <div className="text-sm text-slate-600 font-medium mt-1">Total Initiatives</div>
+            <div className="text-5xl font-bold text-slate-900">{filteredCount}</div>
+            <div className="text-sm text-slate-600 font-medium mt-1">
+              {selectedCategory === 'ALL' ? 'Total' : categories[selectedCategory]?.label} Initiatives
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Category Filter */}
+      <div className="mb-6 max-w-7xl mx-auto">
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-slate-700">Filter by Category:</span>
+          <div className="flex gap-2">
+            {Object.entries(categories).map(([key, cat]) => (
+              <button
+                key={key}
+                onClick={() => handleCategoryChange(key)}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${
+                  selectedCategory === key
+                    ? `${cat.color} text-white shadow-md`
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
+                <span className={`inline-flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full text-xs font-bold ${
+                  selectedCategory === key
+                    ? 'bg-white bg-opacity-30 text-white'
+                    : 'bg-slate-200 text-slate-700'
+                }`}>
+                  {categoryCounts[key]}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
