@@ -4,6 +4,8 @@
 
 -- Drop existing tables if they exist (for reset)
 DROP TABLE IF EXISTS ai_interactions;
+DROP TABLE IF EXISTS initiative_contacts;
+DROP TABLE IF EXISTS initiative_attachments;
 DROP TABLE IF EXISTS stage_transitions;
 DROP TABLE IF EXISTS initiatives;
 DROP TABLE IF EXISTS users;
@@ -40,6 +42,26 @@ CREATE TABLE initiatives (
   current_stage TEXT NOT NULL CHECK(current_stage IN ('IDEA', 'CONCEPT', 'DEVELOPMENT', 'DEPLOYED')),
   submitter_id INTEGER NOT NULL,
   owner_id INTEGER NOT NULL,
+
+  -- Business Owner Information
+  business_owner_name TEXT,
+  business_owner_function TEXT CHECK(business_owner_function IN ('MFG & SCM', 'R&D', 'M&S', 'SF', 'AS', 'PP', 'MI', 'G&A', 'IT')),
+  business_owner_department TEXT,
+
+  -- IT Owner Information
+  it_owner_name TEXT,
+  it_owner_department TEXT,
+
+  -- Priority/Criticality
+  priority TEXT CHECK(priority IN ('CRITICAL', 'HIGH', 'MEDIUM', 'LOW')) DEFAULT 'MEDIUM',
+
+  -- Extended Description
+  detailed_description TEXT,
+
+  -- Timeline
+  timeline_start_date DATETIME,
+  timeline_end_date DATETIME,
+
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_stage_change_date DATETIME,
@@ -79,6 +101,50 @@ CREATE TABLE stage_transitions (
 CREATE INDEX idx_transitions_status ON stage_transitions(status);
 CREATE INDEX idx_transitions_reviewer ON stage_transitions(reviewer_id);
 CREATE INDEX idx_transitions_initiative ON stage_transitions(initiative_id);
+
+-- =============================================================================
+-- INITIATIVE ATTACHMENTS TABLE
+-- =============================================================================
+CREATE TABLE initiative_attachments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  initiative_id INTEGER NOT NULL,
+  attachment_type TEXT NOT NULL CHECK(attachment_type IN ('IMAGE', 'VIDEO', 'DOCUMENT', 'LINK')),
+  file_path TEXT,
+  external_url TEXT,
+  storage_provider TEXT CHECK(storage_provider IN ('LOCAL', 'ONEDRIVE', 'SHAREPOINT', 'GENERIC')),
+  filename TEXT,
+  file_size INTEGER,
+  mime_type TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  created_by INTEGER,
+
+  FOREIGN KEY (initiative_id) REFERENCES initiatives(id) ON DELETE CASCADE,
+  FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+-- Indexes for faster queries
+CREATE INDEX idx_attachments_initiative ON initiative_attachments(initiative_id);
+CREATE INDEX idx_attachments_type ON initiative_attachments(attachment_type);
+
+-- =============================================================================
+-- INITIATIVE CONTACTS TABLE
+-- =============================================================================
+CREATE TABLE initiative_contacts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  initiative_id INTEGER NOT NULL,
+  contact_name TEXT NOT NULL,
+  contact_role TEXT,
+  contact_email TEXT,
+  contact_phone TEXT,
+  is_primary INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (initiative_id) REFERENCES initiatives(id) ON DELETE CASCADE
+);
+
+-- Indexes for faster queries
+CREATE INDEX idx_contacts_initiative ON initiative_contacts(initiative_id);
+CREATE INDEX idx_contacts_primary ON initiative_contacts(is_primary);
 
 -- =============================================================================
 -- AI INTERACTIONS TABLE (Optional - for tracking AI usage)

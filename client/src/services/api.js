@@ -88,6 +88,100 @@ export const updateInitiative = (id, data) => {
 };
 
 // =============================================================================
+// Attachments API
+// =============================================================================
+
+/**
+ * Get all attachments for an initiative
+ * @param {number} initiativeId - Initiative ID
+ * @returns {Promise} API response
+ */
+export const getAttachments = (initiativeId) => {
+  return api.get(`/initiatives/${initiativeId}/attachments`);
+};
+
+/**
+ * Upload a file attachment
+ * @param {number} initiativeId - Initiative ID
+ * @param {File} file - File to upload
+ * @returns {Promise} API response
+ */
+export const uploadAttachment = (initiativeId, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return api.post(`/initiatives/${initiativeId}/attachments`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+/**
+ * Add a link attachment
+ * @param {number} initiativeId - Initiative ID
+ * @param {Object} linkData - Link data (externalUrl, storageProvider, filename)
+ * @returns {Promise} API response
+ */
+export const addLinkAttachment = (initiativeId, linkData) => {
+  return api.post(`/initiatives/${initiativeId}/attachments`, linkData);
+};
+
+/**
+ * Delete an attachment
+ * @param {number} initiativeId - Initiative ID
+ * @param {number} attachmentId - Attachment ID
+ * @returns {Promise} API response
+ */
+export const deleteAttachment = (initiativeId, attachmentId) => {
+  return api.delete(`/initiatives/${initiativeId}/attachments/${attachmentId}`);
+};
+
+// =============================================================================
+// Contacts API
+// =============================================================================
+
+/**
+ * Get all contacts for an initiative
+ * @param {number} initiativeId - Initiative ID
+ * @returns {Promise} API response
+ */
+export const getContacts = (initiativeId) => {
+  return api.get(`/initiatives/${initiativeId}/contacts`);
+};
+
+/**
+ * Create a new contact
+ * @param {number} initiativeId - Initiative ID
+ * @param {Object} contactData - Contact data
+ * @returns {Promise} API response
+ */
+export const createContact = (initiativeId, contactData) => {
+  return api.post(`/initiatives/${initiativeId}/contacts`, contactData);
+};
+
+/**
+ * Update a contact
+ * @param {number} initiativeId - Initiative ID
+ * @param {number} contactId - Contact ID
+ * @param {Object} contactData - Updated contact data
+ * @returns {Promise} API response
+ */
+export const updateContact = (initiativeId, contactId, contactData) => {
+  return api.patch(`/initiatives/${initiativeId}/contacts/${contactId}`, contactData);
+};
+
+/**
+ * Delete a contact
+ * @param {number} initiativeId - Initiative ID
+ * @param {number} contactId - Contact ID
+ * @returns {Promise} API response
+ */
+export const deleteContact = (initiativeId, contactId) => {
+  return api.delete(`/initiatives/${initiativeId}/contacts/${contactId}`);
+};
+
+// =============================================================================
 // Health Check
 // =============================================================================
 

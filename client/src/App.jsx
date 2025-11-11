@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import SubmitIdea from './components/SubmitIdea';
 import KanbanBoard from './components/KanbanBoard';
+import InitiativeDetailView from './components/InitiativeDetailView';
 import { checkHealth } from './services/api';
 
 function AppContent() {
@@ -117,6 +118,7 @@ function AppContent() {
         ) : (
           <Routes>
             <Route path="/board" element={<KanbanBoard />} />
+            <Route path="/board/initiative/:id" element={<InitiativeDetailView />} />
             <Route path="/" element={<SubmitIdea />} />
           </Routes>
         )}
