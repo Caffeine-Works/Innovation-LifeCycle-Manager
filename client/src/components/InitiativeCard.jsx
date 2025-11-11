@@ -4,9 +4,11 @@
  */
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Draggable } from '@hello-pangea/dnd';
 
 const InitiativeCard = ({ initiative, index }) => {
+  const navigate = useNavigate();
   // Category badge colors - flat slate theme
   const categoryColors = {
     TECHNOLOGY: 'bg-slate-100 text-slate-700 border-slate-300',
@@ -35,16 +37,28 @@ const InitiativeCard = ({ initiative, index }) => {
 
   return (
     <Draggable draggableId={initiative.id.toString()} index={index}>
-      {(provided, snapshot) => (
+      {(provided, snapshot) => {
+        /**
+         * Handle card click - navigate to detail view
+         */
+        const handleClick = (e) => {
+          // Don't navigate if user is dragging
+          if (snapshot.isDragging) return;
+
+          navigate(`/board/initiative/${initiative.id}`);
+        };
+
+        return (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
+          onClick={handleClick}
           className={`bg-white rounded-lg p-4 border transition-all ${
             snapshot.isDragging
-              ? 'border-slate-500 shadow-xl rotate-2 scale-105'
-              : 'border-slate-200 hover:border-slate-400 hover:shadow-md'
-          } cursor-grab active:cursor-grabbing`}
+              ? 'border-slate-500 shadow-xl rotate-2 scale-105 cursor-grabbing'
+              : 'border-slate-200 hover:border-slate-400 hover:shadow-md cursor-pointer'
+          }`}
         >
           {/* Title */}
           <h3 className="font-semibold text-slate-900 mb-2 line-clamp-2">
@@ -78,7 +92,8 @@ const InitiativeCard = ({ initiative, index }) => {
             </div>
           </div>
         </div>
-      )}
+        );
+      }}
     </Draggable>
   );
 };

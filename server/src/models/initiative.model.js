@@ -16,7 +16,16 @@ export async function createInitiative(data, userId) {
     title,
     description,
     problemStatement,
-    category
+    category,
+    businessOwnerName,
+    businessOwnerFunction,
+    businessOwnerDepartment,
+    itOwnerName,
+    itOwnerDepartment,
+    priority,
+    detailedDescription,
+    timelineStartDate,
+    timelineEndDate
   } = data;
 
   // Insert initiative
@@ -24,8 +33,12 @@ export async function createInitiative(data, userId) {
     INSERT INTO initiatives (
       title, description, problem_statement, category,
       current_stage, submitter_id, owner_id,
+      business_owner_name, business_owner_function, business_owner_department,
+      it_owner_name, it_owner_department,
+      priority, detailed_description,
+      timeline_start_date, timeline_end_date,
       created_at, updated_at, last_stage_change_date
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), datetime('now'))
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), datetime('now'))
   `;
 
   await execute(sql, [
@@ -35,7 +48,16 @@ export async function createInitiative(data, userId) {
     category,
     'IDEA', // All new initiatives start in IDEA stage
     userId, // submitter
-    userId  // owner (initially same as submitter)
+    userId, // owner (initially same as submitter)
+    businessOwnerName || null,
+    businessOwnerFunction || null,
+    businessOwnerDepartment || null,
+    itOwnerName || null,
+    itOwnerDepartment || null,
+    priority || 'MEDIUM',
+    detailedDescription || description,
+    timelineStartDate || null,
+    timelineEndDate || null
   ]);
 
   // Get the last inserted initiative
@@ -139,6 +161,46 @@ export async function updateInitiative(id, data) {
   if (data.category !== undefined) {
     fields.push('category = ?');
     params.push(data.category);
+  }
+  if (data.current_stage !== undefined) {
+    fields.push('current_stage = ?');
+    params.push(data.current_stage);
+  }
+  if (data.businessOwnerName !== undefined) {
+    fields.push('business_owner_name = ?');
+    params.push(data.businessOwnerName);
+  }
+  if (data.businessOwnerFunction !== undefined) {
+    fields.push('business_owner_function = ?');
+    params.push(data.businessOwnerFunction);
+  }
+  if (data.businessOwnerDepartment !== undefined) {
+    fields.push('business_owner_department = ?');
+    params.push(data.businessOwnerDepartment);
+  }
+  if (data.itOwnerName !== undefined) {
+    fields.push('it_owner_name = ?');
+    params.push(data.itOwnerName);
+  }
+  if (data.itOwnerDepartment !== undefined) {
+    fields.push('it_owner_department = ?');
+    params.push(data.itOwnerDepartment);
+  }
+  if (data.priority !== undefined) {
+    fields.push('priority = ?');
+    params.push(data.priority);
+  }
+  if (data.detailedDescription !== undefined) {
+    fields.push('detailed_description = ?');
+    params.push(data.detailedDescription);
+  }
+  if (data.timelineStartDate !== undefined) {
+    fields.push('timeline_start_date = ?');
+    params.push(data.timelineStartDate);
+  }
+  if (data.timelineEndDate !== undefined) {
+    fields.push('timeline_end_date = ?');
+    params.push(data.timelineEndDate);
   }
 
   // Always update the updated_at timestamp
