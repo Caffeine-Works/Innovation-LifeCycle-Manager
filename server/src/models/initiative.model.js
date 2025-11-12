@@ -1,12 +1,12 @@
 /**
  * Initiative Model
- * Handles database operations for initiatives
+ * Handles database operations for initiatives (2NF Normalized)
  */
 
 import { query, queryOne, execute, saveDatabase } from '../config/database.js';
 
 /**
- * Create a new initiative
+ * Create a new initiative with associated users
  * @param {Object} data - Initiative data
  * @param {number} userId - ID of user creating the initiative
  * @returns {Promise<Object>} Created initiative
@@ -16,48 +16,42 @@ export async function createInitiative(data, userId) {
     title,
     description,
     problemStatement,
-    category,
-    businessOwnerName,
-    businessOwnerFunction,
-    businessOwnerDepartment,
-    itOwnerName,
-    itOwnerDepartment,
-    priority,
     detailedDescription,
-    timelineStartDate,
-    timelineEndDate
+    category,
+    priority,
+    ideaDate,
+    conceptDate,
+    projectStartDate,
+    developmentDate,
+    deploymentDate,
+    completionDate
   } = data;
 
   // Insert initiative
   const sql = `
     INSERT INTO initiatives (
-      title, description, problem_statement, category,
-      current_stage, submitter_id, owner_id,
-      business_owner_name, business_owner_function, business_owner_department,
-      it_owner_name, it_owner_department,
-      priority, detailed_description,
-      timeline_start_date, timeline_end_date,
+      title, description, problem_statement, detailed_description,
+      category, current_stage, priority,
+      idea_date, concept_date, project_start_date,
+      development_date, deployment_date, completion_date,
       created_at, updated_at, last_stage_change_date
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), datetime('now'))
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), datetime('now'))
   `;
 
   await execute(sql, [
     title,
     description,
     problemStatement,
+    detailedDescription || description,
     category,
     'IDEA', // All new initiatives start in IDEA stage
-    userId, // submitter
-    userId, // owner (initially same as submitter)
-    businessOwnerName || null,
-    businessOwnerFunction || null,
-    businessOwnerDepartment || null,
-    itOwnerName || null,
-    itOwnerDepartment || null,
     priority || 'MEDIUM',
-    detailedDescription || description,
-    timelineStartDate || null,
-    timelineEndDate || null
+    ideaDate || null,
+    conceptDate || null,
+    projectStartDate || null,
+    developmentDate || null,
+    deploymentDate || null,
+    completionDate || null
   ]);
 
   // Get the last inserted initiative
@@ -65,29 +59,63 @@ export async function createInitiative(data, userId) {
     'SELECT * FROM initiatives WHERE id = (SELECT MAX(id) FROM initiatives)'
   );
 
+  // Add submitter as SUBMITTER type
+  await execute(`
+    INSERT INTO initiative_users (initiative_id, user_id, user_type_id, is_primary)
+    VALUES (?, ?, (SELECT id FROM user_types WHERE type_name = 'SUBMITTER'), 1)
+  `, [result.id, userId]);
+
   return result;
 }
 
 /**
- * Get initiative by ID with user details
+ * Get initiative by ID with all associated users
  * @param {number} id - Initiative ID
  * @returns {Promise<Object|null>} Initiative with user details
  */
 export async function getInitiativeById(id) {
-  const sql = `
-    SELECT
-      i.*,
-      u_submitter.first_name || ' ' || u_submitter.last_name AS submitter_name,
-      u_submitter.email AS submitter_email,
-      u_owner.first_name || ' ' || u_owner.last_name AS owner_name,
-      u_owner.email AS owner_email
-    FROM initiatives i
-    LEFT JOIN users u_submitter ON i.submitter_id = u_submitter.id
-    LEFT JOIN users u_owner ON i.owner_id = u_owner.id
-    WHERE i.id = ?
-  `;
+  // Get basic initiative data
+  const initiative = await queryOne('SELECT * FROM initiatives WHERE id = ?', [id]);
 
-  return await queryOne(sql, [id]);
+  if (!initiative) return null;
+
+  // Get all associated users
+  const users = await query(`
+    SELECT
+      u.id, u.first_name, u.last_name, u.email, u.department, u.function, u.phone,
+      ut.type_name, iu.is_primary
+    FROM initiative_users iu
+    JOIN users u ON iu.user_id = u.id
+    JOIN user_types ut ON iu.user_type_id = ut.id
+    WHERE iu.initiative_id = ?
+    ORDER BY
+      CASE ut.type_name
+        WHEN 'SUBMITTER' THEN 1
+        WHEN 'BUSINESS_OWNER' THEN 2
+        WHEN 'IT_OWNER' THEN 3
+        ELSE 4
+      END
+  `, [id]);
+
+  // Build user data for easy access
+  const submitter = users.find(u => u.type_name === 'SUBMITTER');
+  const businessOwner = users.find(u => u.type_name === 'BUSINESS_OWNER');
+  const itOwner = users.find(u => u.type_name === 'IT_OWNER');
+
+  // Add convenient fields for backward compatibility
+  return {
+    ...initiative,
+    submitter_name: submitter ? `${submitter.first_name} ${submitter.last_name}` : null,
+    submitter_email: submitter?.email,
+    business_owner_name: businessOwner ? `${businessOwner.first_name} ${businessOwner.last_name}` : null,
+    business_owner_function: businessOwner?.function,
+    business_owner_department: businessOwner?.department,
+    it_owner_name: itOwner ? `${itOwner.first_name} ${itOwner.last_name}` : null,
+    it_owner_department: itOwner?.department,
+    owner_name: submitter ? `${submitter.first_name} ${submitter.last_name}` : null, // For backward compatibility
+    owner_email: submitter?.email,
+    users: users // Full user list
+  };
 }
 
 /**
@@ -96,43 +124,56 @@ export async function getInitiativeById(id) {
  * @returns {Promise<Array>} Array of initiatives
  */
 export async function getAllInitiatives(filters = {}) {
-  let sql = `
-    SELECT
-      i.*,
-      u_submitter.first_name || ' ' || u_submitter.last_name AS submitter_name,
-      u_submitter.email AS submitter_email,
-      u_owner.first_name || ' ' || u_owner.last_name AS owner_name,
-      u_owner.email AS owner_email
-    FROM initiatives i
-    LEFT JOIN users u_submitter ON i.submitter_id = u_submitter.id
-    LEFT JOIN users u_owner ON i.owner_id = u_owner.id
-  `;
-
+  let sql = 'SELECT * FROM initiatives';
   const conditions = [];
   const params = [];
 
   if (filters.stage) {
-    conditions.push('i.current_stage = ?');
+    conditions.push('current_stage = ?');
     params.push(filters.stage);
   }
 
   if (filters.category) {
-    conditions.push('i.category = ?');
+    conditions.push('category = ?');
     params.push(filters.category);
-  }
-
-  if (filters.owner_id) {
-    conditions.push('i.owner_id = ?');
-    params.push(filters.owner_id);
   }
 
   if (conditions.length > 0) {
     sql += ' WHERE ' + conditions.join(' AND ');
   }
 
-  sql += ' ORDER BY i.created_at DESC';
+  sql += ' ORDER BY created_at DESC';
 
-  return await query(sql, params);
+  const initiatives = await query(sql, params);
+
+  // For each initiative, get submitter and owner names
+  const result = await Promise.all(initiatives.map(async (initiative) => {
+    const users = await query(`
+      SELECT
+        u.first_name, u.last_name, u.email,
+        ut.type_name
+      FROM initiative_users iu
+      JOIN users u ON iu.user_id = u.id
+      JOIN user_types ut ON iu.user_type_id = ut.id
+      WHERE iu.initiative_id = ? AND ut.type_name IN ('SUBMITTER', 'BUSINESS_OWNER', 'IT_OWNER')
+    `, [initiative.id]);
+
+    const submitter = users.find(u => u.type_name === 'SUBMITTER');
+    const businessOwner = users.find(u => u.type_name === 'BUSINESS_OWNER');
+    const itOwner = users.find(u => u.type_name === 'IT_OWNER');
+
+    return {
+      ...initiative,
+      submitter_name: submitter ? `${submitter.first_name} ${submitter.last_name}` : null,
+      submitter_email: submitter?.email,
+      owner_name: submitter ? `${submitter.first_name} ${submitter.last_name}` : null,
+      owner_email: submitter?.email,
+      business_owner_name: businessOwner ? `${businessOwner.first_name} ${businessOwner.last_name}` : null,
+      it_owner_name: itOwner ? `${itOwner.first_name} ${itOwner.last_name}` : null
+    };
+  }));
+
+  return result;
 }
 
 /**
@@ -158,6 +199,10 @@ export async function updateInitiative(id, data) {
     fields.push('problem_statement = ?');
     params.push(data.problemStatement);
   }
+  if (data.detailedDescription !== undefined) {
+    fields.push('detailed_description = ?');
+    params.push(data.detailedDescription);
+  }
   if (data.category !== undefined) {
     fields.push('category = ?');
     params.push(data.category);
@@ -166,41 +211,33 @@ export async function updateInitiative(id, data) {
     fields.push('current_stage = ?');
     params.push(data.current_stage);
   }
-  if (data.businessOwnerName !== undefined) {
-    fields.push('business_owner_name = ?');
-    params.push(data.businessOwnerName);
-  }
-  if (data.businessOwnerFunction !== undefined) {
-    fields.push('business_owner_function = ?');
-    params.push(data.businessOwnerFunction);
-  }
-  if (data.businessOwnerDepartment !== undefined) {
-    fields.push('business_owner_department = ?');
-    params.push(data.businessOwnerDepartment);
-  }
-  if (data.itOwnerName !== undefined) {
-    fields.push('it_owner_name = ?');
-    params.push(data.itOwnerName);
-  }
-  if (data.itOwnerDepartment !== undefined) {
-    fields.push('it_owner_department = ?');
-    params.push(data.itOwnerDepartment);
-  }
   if (data.priority !== undefined) {
     fields.push('priority = ?');
     params.push(data.priority);
   }
-  if (data.detailedDescription !== undefined) {
-    fields.push('detailed_description = ?');
-    params.push(data.detailedDescription);
+  if (data.ideaDate !== undefined) {
+    fields.push('idea_date = ?');
+    params.push(data.ideaDate);
   }
-  if (data.timelineStartDate !== undefined) {
-    fields.push('timeline_start_date = ?');
-    params.push(data.timelineStartDate);
+  if (data.conceptDate !== undefined) {
+    fields.push('concept_date = ?');
+    params.push(data.conceptDate);
   }
-  if (data.timelineEndDate !== undefined) {
-    fields.push('timeline_end_date = ?');
-    params.push(data.timelineEndDate);
+  if (data.projectStartDate !== undefined) {
+    fields.push('project_start_date = ?');
+    params.push(data.projectStartDate);
+  }
+  if (data.developmentDate !== undefined) {
+    fields.push('development_date = ?');
+    params.push(data.developmentDate);
+  }
+  if (data.deploymentDate !== undefined) {
+    fields.push('deployment_date = ?');
+    params.push(data.deploymentDate);
+  }
+  if (data.completionDate !== undefined) {
+    fields.push('completion_date = ?');
+    params.push(data.completionDate);
   }
 
   // Always update the updated_at timestamp
@@ -219,9 +256,39 @@ export async function updateInitiative(id, data) {
   return await getInitiativeById(id);
 }
 
+/**
+ * Get users for an initiative by type
+ * @param {number} initiativeId - Initiative ID
+ * @param {string} typeName - User type name (e.g., 'CONTACT')
+ * @returns {Promise<Array>} Array of users
+ */
+export async function getInitiativeUsers(initiativeId, typeName = null) {
+  let sql = `
+    SELECT
+      u.id, u.first_name, u.last_name, u.email, u.department, u.function, u.phone,
+      ut.type_name, iu.is_primary, iu.assigned_at
+    FROM initiative_users iu
+    JOIN users u ON iu.user_id = u.id
+    JOIN user_types ut ON iu.user_type_id = ut.id
+    WHERE iu.initiative_id = ?
+  `;
+
+  const params = [initiativeId];
+
+  if (typeName) {
+    sql += ' AND ut.type_name = ?';
+    params.push(typeName);
+  }
+
+  sql += ' ORDER BY iu.is_primary DESC, iu.assigned_at ASC';
+
+  return await query(sql, params);
+}
+
 export default {
   createInitiative,
   getInitiativeById,
   getAllInitiatives,
-  updateInitiative
+  updateInitiative,
+  getInitiativeUsers
 };

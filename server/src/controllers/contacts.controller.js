@@ -48,7 +48,7 @@ export async function getContacts(req, res) {
 export async function createContact(req, res) {
   try {
     const { id } = req.params;
-    const { contactName, contactRole, contactEmail, contactPhone, isPrimary } = req.body;
+    const { firstName, lastName, email, phone, department, function: userFunction, isPrimary } = req.body;
 
     // Check if initiative exists
     const initiative = await InitiativeModel.getInitiativeById(id);
@@ -60,18 +60,20 @@ export async function createContact(req, res) {
     }
 
     // Validate required fields
-    if (!contactName) {
+    if (!firstName || !lastName) {
       return res.status(400).json({
         error: 'Bad Request',
-        message: 'Contact name is required'
+        message: 'First name and last name are required'
       });
     }
 
     const contactData = {
-      contactName,
-      contactRole,
-      contactEmail,
-      contactPhone,
+      firstName,
+      lastName,
+      email,
+      phone,
+      department,
+      function: userFunction,
       isPrimary: isPrimary || false
     };
 
