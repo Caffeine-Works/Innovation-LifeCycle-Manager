@@ -117,6 +117,73 @@ Co-Authored-By: Julien <32256332+Gouliath1@users.noreply.github.com>
 - Use Prettier/ESLint configuration
 - No console.log in production code
 
+### Database Design Standards
+
+**Second Normal Form (2NF) Requirement**:
+All database designs MUST follow **Second Normal Form (2NF)** principles:
+
+1. **First Normal Form (1NF)**:
+   - All columns contain atomic values (no repeating groups)
+   - Each row is unique (primary key exists)
+   - Column order doesn't matter
+
+2. **Second Normal Form (2NF)**:
+   - Must be in 1NF
+   - All non-key attributes depend on the ENTIRE primary key
+   - No partial dependencies
+   - Eliminate redundant data through proper table relationships
+
+**Design Principles**:
+- **One entity, one table**: Don't duplicate entity data across tables
+- **Use foreign keys**: Link related data through relationships, not duplication
+- **Normalize relationships**: Use junction/association tables for many-to-many relationships
+- **User types as data**: Store user roles/types in a separate reference table, not as separate fields
+- **Avoid redundancy**: If the same data appears in multiple places, normalize it
+
+**Example - User/Contact Management**:
+❌ **Wrong** (Not 2NF):
+```sql
+CREATE TABLE initiatives (
+  id INTEGER PRIMARY KEY,
+  business_owner_name TEXT,
+  business_owner_department TEXT,
+  it_owner_name TEXT,
+  it_owner_department TEXT
+  -- Redundant user data stored directly
+);
+```
+
+✅ **Correct** (2NF):
+```sql
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY,
+  name TEXT,
+  email TEXT,
+  department TEXT
+);
+
+CREATE TABLE user_types (
+  id INTEGER PRIMARY KEY,
+  type_name TEXT -- 'BUSINESS_OWNER', 'IT_OWNER', 'SUBMITTER', etc.
+);
+
+CREATE TABLE initiative_users (
+  initiative_id INTEGER,
+  user_id INTEGER,
+  user_type_id INTEGER,
+  FOREIGN KEY (initiative_id) REFERENCES initiatives(id),
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (user_type_id) REFERENCES user_types(id),
+  PRIMARY KEY (initiative_id, user_id, user_type_id)
+);
+```
+
+**Benefits**:
+- Single source of truth for user data
+- Easy to update user information once
+- Users can have multiple roles
+- No data duplication or inconsistency
+
 ---
 
 ## Git Commit Guidelines
